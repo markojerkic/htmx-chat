@@ -4,11 +4,13 @@ templ Layout() {
 	<!DOCTYPE html>
 	<html>
 		<head>
-			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
-			<script src="https://cdn.tailwindcss.com"></script>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<!--<script src="https://unpkg.com/htmx.org@1.9.10"></script>-->
+			<link rel="stylesheet" href="/output.css"/>
 			<title>Go + Templ + HTMX</title>
 		</head>
-		<body class="bg-red-200 p-4">
+		<body class="h-fit">
 			{ children... }
 		</body>
 	</html>

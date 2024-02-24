@@ -1,3 +1,5 @@
 tmp
 templates/*.go
 templates/*.txt
+css/output.css
+htmx-chat
