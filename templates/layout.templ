@@ -1,0 +1,15 @@
+package templates
+
+templ Layout() {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<title>Go + Templ + HTMX</title>
+		</head>
+		<body class="bg-red-200 p-4">
+			{ children... }
+		</body>
+	</html>
+}
