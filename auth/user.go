@@ -1,9 +1,13 @@
 package auth
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/labstack/echo/v4"
+)
 
 type User struct {
-	ID   string `form:"id" json:"id"`
+	ID   string `form:"username" json:"username"`
 	Name string `form:"name" json:"name"`
 }
 
@@ -24,6 +28,25 @@ func (r *RegisteredUsers) Add(user User) {
 	defer r.lock.Unlock()
 
 	r.users[user.ID] = user
+}
+
+// Get list of all users which are not the user querying
+func (r *RegisteredUsers) GetAllUsers(c *echo.Context) []User {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	currentUsrer := (*c).Get("user").(User)
+
+	var users = make([]User, len(r.users))
+
+	for _, user := range r.users {
+		if user.ID != currentUsrer.ID {
+			users = append(users, user)
+		} else {
+			(*c).Logger().Infof("Skipping user %s", user.ID)
+		}
+	}
+	return users
 }
 
 var UsersStore = newRegisteredUsers()
