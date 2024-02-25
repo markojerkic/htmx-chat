@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"htmx-chat/auth"
 	"htmx-chat/models"
 	"htmx-chat/templates"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func ChatHandler(c echo.Context) error {
-	user := c.Get("user").(models.User)
+	user := c.Get("user").(auth.User)
 
 	rooms := []models.ChatRoom{
 		{
@@ -30,12 +31,3 @@ func ChatHandler(c echo.Context) error {
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
 }
 
-func RoomHandler(c echo.Context) error {
-
-	c.Logger().Info("Room {}", c.Param("id"))
-	roomComponent := templates.Room()
-
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
-
-	return roomComponent.Render(c.Request().Context(), c.Response().Writer)
-}

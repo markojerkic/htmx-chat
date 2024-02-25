@@ -2,8 +2,6 @@ package auth
 
 import (
 	"encoding/json"
-	"htmx-chat/models"
-	"htmx-chat/templates"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -11,7 +9,7 @@ import (
 )
 
 func RegisterViewHandler(c echo.Context) error {
-	register := templates.Register()
+	register := register()
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 
@@ -21,15 +19,15 @@ func RegisterViewHandler(c echo.Context) error {
 func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		sess, err := session.Get("session", c)
-		c.Logger().Info("AuthMiddleware ", sess.Values)
 
-		if err != nil {
+		if err != nil || sess.Values["user"] == nil {
 			c.Logger().Error("AuthMiddleware: session not found")
 			return c.Redirect(302, "/register")
 		}
 
-		var user models.User
-		if err := json.Unmarshal(sess.Values["user"].([]byte), &user); err != nil {
+		var user User
+		err = json.Unmarshal(sess.Values["user"].([]byte), &user)
+		if err != nil {
 			c.Logger().Error("AuthMiddleware: user not found")
 			return c.Redirect(302, "/register")
 		}
@@ -45,7 +43,7 @@ func RegisterHandler(c echo.Context) error {
 		return err
 	}
 
-	var user models.User
+	var user User
 	if err := c.Bind(&user); err != nil {
 		c.Logger().Error("RegisterHandler: user not binded ", err)
 		return c.Redirect(302, "/register")
@@ -70,6 +68,8 @@ func RegisterHandler(c echo.Context) error {
 
 	sess.Values["user"] = userJson
 	err = sess.Save(c.Request(), c.Response())
+
+	UsersStore.Add(user)
 
 	if err != nil {
 		c.Logger().Error("RegisterHandler: session not saved ", err)

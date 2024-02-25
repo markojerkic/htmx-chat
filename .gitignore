@@ -1,4 +1,6 @@
 tmp
+**/*_templ.go
+**/*_templ.txt
 templates/*.go
 templates/*.txt
 css/output.css

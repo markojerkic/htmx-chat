@@ -3,10 +3,11 @@ package main
 import (
 	"htmx-chat/auth"
 	"htmx-chat/chat"
+	"htmx-chat/room"
 
-	"github.com/labstack/echo/v4"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 	restricted := e.Group("", auth.AuthMiddleware);
 
 	restricted.GET("/", chat.ChatHandler)
-	restricted.GET("/room/:id", chat.RoomHandler)
+	restricted.GET("/room/:id", room.RoomHandler)
 
 	e.GET("/register", auth.RegisterViewHandler)
 	e.POST("/register", auth.RegisterHandler)
