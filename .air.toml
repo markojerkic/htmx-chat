@@ -1,12 +1,12 @@
 root = "."
 testdata_dir = "testdata"
 tmp_dir = "tmp"
-run_cmd = "go build -o ./tmp/main ."
+run_cmd = "bunx tailwindcss -i ./css/index.css -o ./css/output.css --watch & go build -o ./tmp/main ."
 
 [build]
   args_bin = []
   bin = "./tmp/main"
-  cmd = "templ generate && bunx tailwindcss -i ./css/index.css -o ./css/output.css && go build -o ./tmp/main ."
+  cmd = "templ generate && go build -o ./tmp/main ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []

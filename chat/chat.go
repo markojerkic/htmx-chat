@@ -28,3 +28,13 @@ func ChatHandler(c echo.Context) error {
 
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
 }
+
+func RoomHandler(c echo.Context) error {
+
+	c.Logger().Info("Room {}", c.Param("id"))
+	roomComponent := templates.Room()
+
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
+
+	return roomComponent.Render(c.Request().Context(), c.Response().Writer)
+}
