@@ -64,3 +64,17 @@ func AllRoomsHandler(c echo.Context) error {
 
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
 }
+
+func OpenChatHandler(c echo.Context) error {
+	currentUsrer := c.Get("user").(auth.User)
+
+	rooms := []chatRoom{}
+
+	requestUserId := c.Param("id")
+
+	roomsComponent := createNewRoom(rooms, requestUserId, currentUsrer)
+
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
+
+	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
+}

@@ -22,7 +22,8 @@ func main() {
 
 	restricted.GET("/", room.AllRoomsHandler)
 
-	restricted.GET("/room/:id", chat.OpenChatHandler)
+	restricted.GET("/chat/:id", chat.OpenChatHandler)
+	restricted.GET("/room/:id", room.OpenChatHandler)
 	restricted.GET("/room/new", room.NewRoomHandler)
 	restricted.GET("/room/search", room.SearchUsersNewRoom)
 

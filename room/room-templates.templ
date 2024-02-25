@@ -27,7 +27,6 @@ templ roomsList(rooms []chatRoom, currentUserId string) {
 <div class="border border-black rounded-md">
 	<h2>Chat Rooms</h2>
 	<ul id="roomList" role="list" class="divide-y divide-gray-100 flex flex-col justify-center">
-		<!-- Add new room -->
 		<button class="my-2 mx-auto p-2 bg-blue-500 text-white rounded-sm" hx-get="/room/new" hx-trigger="click"
 			hx-target="#roomList" hx-swap="innerHTML">+ Add new room</button>
 		for _, room := range rooms {
@@ -37,12 +36,11 @@ templ roomsList(rooms []chatRoom, currentUserId string) {
 </div>
 }
 
-templ allRooms(rooms []chatRoom, user auth.User) {
+templ allRooms(rooms []chatRoom, currentUser auth.User) {
 @templates.Layout() {
-<h2>Hello, <a href="/register">{ user.Name }</a></h2>
-<div class="p-4 grid grid-cols-4 gap-x-4 h-screen border border-black">
-	@roomsList(rooms, user.ID)
-	<!--@room() -->
+<h2>Hello, <a href="/register">{ currentUser.Name }</a></h2>
+<div id="chat-with-rooms" class="p-4 grid grid-cols-4 gap-x-4 h-screen border border-black">
+	@roomsList(rooms, currentUser.ID)
 	@chat.EmptyChat()
 </div>
 }
@@ -62,9 +60,15 @@ templ newRoom(users []auth.User) {
 templ newRoomUsersList(users []auth.User) {
 for _, user := range users {
 <li class="flex justify-between gap-x-6 py-5 hover:bg-gray-200">
-	<span class="flex min-w-0 gap-x-4 hover:cursor-pointer">
+	<span class="flex min-w-0 gap-x-4 hover:cursor-pointer" hx-get={ fmt.Sprintf("/room/%s", user.ID) }
+		hx-target="#chat-with-rooms">
 		@userPreview(user)
 	</span>
 </li>
 }
+}
+
+templ createNewRoom(rooms []chatRoom, newChatUserId string, currentUser auth.User) {
+@roomsList(rooms, currentUser.ID)
+@chat.Chat()
 }
