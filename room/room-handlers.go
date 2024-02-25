@@ -2,8 +2,6 @@ package room
 
 import (
 	"htmx-chat/auth"
-	"htmx-chat/templates"
-
 	"github.com/labstack/echo/v4"
 )
 
@@ -40,10 +38,3 @@ func AllRoomsHandler(c echo.Context) error {
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
 }
 
-func RoomHandler(c echo.Context) error {
-	roomComponent := templates.Room()
-
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
-
-	return roomComponent.Render(c.Request().Context(), c.Response().Writer)
-}

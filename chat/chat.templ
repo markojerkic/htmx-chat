@@ -1,0 +1,22 @@
+package chat
+
+templ chatLayout() {
+	<div id="chat" class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
+		{ children... }
+	</div>
+}
+
+templ Chat() {
+	@chatLayout() {
+		<div class="w-full grow bg-blue-200">
+			Ovdje će doći sve poruke
+		</div>
+		<input type="text" class="w-full h-12 border border-black rounded-md" placeholder="Unesite sljedeću poruku"/>
+	}
+}
+
+templ EmptyChat() {
+	@chatLayout() {
+		<span>Odaberite sobu</span>
+	}
+}

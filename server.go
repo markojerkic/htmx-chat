@@ -20,8 +20,9 @@ func main() {
 
 	restricted := e.Group("", auth.AuthMiddleware);
 
-	restricted.GET("/", chat.ChatHandler)
-	restricted.GET("/room/:id", room.RoomHandler)
+	restricted.GET("/", room.AllRoomsHandler)
+
+	restricted.GET("/room/:id", chat.OpenChatHandler)
 
 	e.GET("/register", auth.RegisterViewHandler)
 	e.POST("/register", auth.RegisterHandler)

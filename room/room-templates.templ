@@ -3,6 +3,7 @@ package room
 import "fmt"
 import "htmx-chat/templates"
 import "htmx-chat/auth"
+import "htmx-chat/chat"
 
 templ roomPreview(room chatRoom) {
 	<li class="flex justify-between gap-x-6 py-5 hover:bg-gray-200">
@@ -10,7 +11,7 @@ templ roomPreview(room chatRoom) {
 			class="flex min-w-0 gap-x-4 hover:cursor-pointer"
 			hx-get={ fmt.Sprintf("/room/%s", room.ID) }
 			hx-trigger="click"
-			hx-target="#room"
+			hx-target="#chat"
 			hx-swap="outerHTML"
 		>
 			<img
@@ -32,27 +33,6 @@ templ roomPreview(room chatRoom) {
 	</li>
 }
 
-templ roomWrapper() {
-	<div id="room" class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
-		{ children... }
-	</div>
-}
-
-templ Room() {
-	@roomWrapper() {
-		<div class="w-full grow bg-blue-200">
-			Ovdje će doći sve poruke
-		</div>
-		<input type="text" class="w-full h-12 border border-black rounded-md" placeholder="Unesite sljedeću poruku"/>
-	}
-}
-
-templ emptyRoom() {
-	@roomWrapper() {
-		<span>Odaberite sobu</span>
-	}
-}
-
 templ roomsList(rooms []chatRoom) {
 	<div class="border border-black rounded-md">
 		<h2>Chat Rooms</h2>
@@ -70,7 +50,7 @@ templ allRooms(rooms []chatRoom, user auth.User) {
 		<div class="p-4 grid grid-cols-4 gap-x-4 h-screen border border-black">
 			@roomsList(rooms)
 			<!--@room() -->
-			@emptyRoom()
+			@chat.EmptyChat()
 		</div>
 	}
 }
