@@ -20,22 +20,21 @@ func RegisterViewHandler(c echo.Context) error {
 
 func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// if !c.Cookie("session")
-
 		sess, err := session.Get("session", c)
 		c.Logger().Info("AuthMiddleware ", sess.Values)
-		c.Logger().Info("AuthMiddleware test 2: ", sess.Values["marko"])
 
 		if err != nil {
 			c.Logger().Error("AuthMiddleware: session not found")
 			return c.Redirect(302, "/register")
 		}
 
-		if sess.Values["user"] == nil {
+		var user models.User
+		if err := json.Unmarshal(sess.Values["user"].([]byte), &user); err != nil {
 			c.Logger().Error("AuthMiddleware: user not found")
 			return c.Redirect(302, "/register")
 		}
 
+		c.Set("user", user)
 		return next(c)
 	}
 }
@@ -70,7 +69,6 @@ func RegisterHandler(c echo.Context) error {
 	}
 
 	sess.Values["user"] = userJson
-	sess.Values["marko"] = "Jerkić"
 	err = sess.Save(c.Request(), c.Response())
 
 	if err != nil {

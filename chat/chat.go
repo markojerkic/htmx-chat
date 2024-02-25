@@ -8,6 +8,7 @@ import (
 )
 
 func ChatHandler(c echo.Context) error {
+	user := c.Get("user").(models.User)
 
 	rooms := []models.ChatRoom{
 		{
@@ -22,7 +23,7 @@ func ChatHandler(c echo.Context) error {
 		},
 	}
 
-	roomsComponent := templates.Chat(rooms)
+	roomsComponent := templates.Chat(rooms, user)
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 

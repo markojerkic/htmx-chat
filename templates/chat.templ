@@ -63,8 +63,9 @@ templ chatList(rooms []models.ChatRoom) {
 	</div>
 }
 
-templ Chat(rooms []models.ChatRoom) {
+templ Chat(rooms []models.ChatRoom, user models.User) {
 	@Layout() {
+		<h2>Hello, { user.Name }</h2>
 		<div class="p-4 grid grid-cols-4 gap-x-4 h-screen border border-black">
 			@chatList(rooms)
 			<!--@room() -->

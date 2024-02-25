@@ -17,7 +17,7 @@ func main() {
 	sessionMiddleware := session.Middleware(sessions.NewCookieStore([]byte("secret")))
 	e.Use(sessionMiddleware)
 
-	restricted := e.Group("/", sessionMiddleware, auth.AuthMiddleware);
+	restricted := e.Group("", auth.AuthMiddleware);
 
 	restricted.GET("/", chat.ChatHandler)
 	restricted.GET("/room/:id", chat.RoomHandler)
