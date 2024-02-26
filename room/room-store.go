@@ -1,13 +1,9 @@
 package room
 
 import (
-	"encoding/json"
 	"fmt"
 	"htmx-chat/auth"
-	"os"
-	"sync"
-
-	guuid "github.com/google/uuid"
+	"htmx-chat/db"
 )
 
 type chatRoom struct {
@@ -23,17 +19,27 @@ func (r *chatRoom) GetClientWhichIsNotMe(myId string) auth.User {
 	return auth.User(*r.ClientA)
 }
 
+func (r chatRoom) GetID() string {
+	return r.ID
+}
+
+func (r chatRoom) SetID(ID string) {
+	r.ID = ID
+}
+
 type roomStore struct {
-	lock  sync.RWMutex
-	rooms map[string]chatRoom
+	rooms *db.Collection[chatRoom]
 }
 
 func (r *roomStore) GetAllMyRooms(user auth.User) []chatRoom {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
+	rooms, err := r.rooms.GetAll()
+	if err != nil {
+		fmt.Println("Error getting all rooms")
+		panic(err)
+	}
+	myRooms := make([]chatRoom, 0, len(rooms))
 
-	myRooms := make([]chatRoom, 0, 10)
-	for _, room := range r.rooms {
+	for _, room := range rooms {
 		if room.ClientA.ID == user.ID || room.ClientB.ID == user.ID {
 			myRooms = append(myRooms, room)
 		}
@@ -43,73 +49,37 @@ func (r *roomStore) GetAllMyRooms(user auth.User) []chatRoom {
 }
 
 func (r *roomStore) AddRoom(userA auth.User, userB auth.User) chatRoom {
-	r.lock.Lock()
-	defer r.lock.Unlock()
+	rooms, err := r.rooms.GetAll()
+	if err != nil {
+		fmt.Println("Error getting all rooms")
+		panic(err)
+	}
 
-	for id, room := range r.rooms {
+	for id, room := range rooms {
 		isClientA := room.ClientA.ID == userA.ID || room.ClientA.ID == userB.ID
 		isClientB := room.ClientB.ID == userA.ID || room.ClientB.ID == userB.ID
 
-		if isClientA || isClientB {
-			return r.rooms[id]
+		if isClientA && isClientB {
+			return rooms[id]
 		}
 	}
 
 	room := chatRoom{
-		ID:      guuid.NewString(),
 		ClientA: &userA,
 		ClientB: &userB,
 	}
 
-	r.rooms[room.ID] = room
-
-	r.syncToFile()
-
+	r.rooms.Save(room)
 	return room
 }
 
-func (r *roomStore) GetRoom(id string) chatRoom {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-
-	return r.rooms[id]
-}
-
-func (r *roomStore) syncToFile() {
-	// write r.rooms to byte array
-	rooms, err := json.Marshal(r.rooms)
-	if err != nil {
-		fmt.Println("Error marshalling rooms")
-		panic(err)
-	}
-
-	err = os.WriteFile("/tmp/chat-rooms", []byte(rooms), 0777)
-
-	if err != nil {
-		fmt.Println("Error writing users to file")
-		panic(err)
-	}
+func (r *roomStore) GetRoom(id string) (chatRoom, error) {
+	return r.rooms.Get(id)
 }
 
 func newRoomStore() *roomStore {
-	rooms, err := os.ReadFile("/tmp/chat-rooms")
-
-	var roomsMap map[string]chatRoom
-	if err != nil {
-		fmt.Println("No rooms file found, creating new")
-		roomsMap = make(map[string]chatRoom)
-	} else {
-		err = json.Unmarshal(rooms, &roomsMap)
-		fmt.Println("Read rooms from file", roomsMap)
-		if err != nil {
-			fmt.Println("Error unmarshalling rooms")
-			panic(err)
-		}
-	}
-
 	return &roomStore{
-		rooms: roomsMap,
-		lock:  sync.RWMutex{},
+		rooms: db.NewCollection[chatRoom]("rooms"),
 	}
 }
 
