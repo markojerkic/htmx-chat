@@ -100,3 +100,31 @@ func (c *Collection[T]) GetAll() (map[string]T, error) {
 
 	return c.values, nil
 }
+
+func (c *Collection[T]) GetByPredicate(predicate func(T) bool) (T, error) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	for _, item := range c.values {
+		if predicate(item) {
+			return item, nil
+		}
+	}
+
+	return *new(T), fmt.Errorf("Item not found")
+}
+
+func (c *Collection[T]) GetAllByPredicate(predicate func(T) bool) []T {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	items := make([]T, 0, len(c.values))
+
+	for _, item := range c.values {
+		if predicate(item) {
+			items = append(items, item)
+		}
+	}
+
+	return items
+}

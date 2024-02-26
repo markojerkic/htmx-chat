@@ -1,7 +1,6 @@
 package room
 
 import (
-	"fmt"
 	"htmx-chat/auth"
 	"htmx-chat/db"
 )
@@ -32,39 +31,24 @@ type roomStore struct {
 }
 
 func (r *roomStore) GetAllMyRooms(user auth.User) []chatRoom {
-	rooms, err := r.rooms.GetAll()
-	if err != nil {
-		fmt.Println("Error getting all rooms")
-		panic(err)
-	}
-	myRooms := make([]chatRoom, 0, len(rooms))
-
-	for _, room := range rooms {
-		if room.ClientA.ID == user.ID || room.ClientB.ID == user.ID {
-			myRooms = append(myRooms, room)
-		}
-	}
-
-	return myRooms
+	return r.rooms.GetAllByPredicate(func(room chatRoom) bool {
+		return room.ClientA.ID == user.ID || room.ClientB.ID == user.ID
+	})
 }
 
 func (r *roomStore) AddRoom(userA auth.User, userB auth.User) chatRoom {
-	rooms, err := r.rooms.GetAll()
-	if err != nil {
-		fmt.Println("Error getting all rooms")
-		panic(err)
-	}
-
-	for id, room := range rooms {
+	room, err := r.rooms.GetByPredicate(func(room chatRoom) bool {
 		isClientA := room.ClientA.ID == userA.ID || room.ClientA.ID == userB.ID
 		isClientB := room.ClientB.ID == userA.ID || room.ClientB.ID == userB.ID
 
-		if isClientA && isClientB {
-			return rooms[id]
-		}
+		return isClientA && isClientB
+	})
+
+	if err == nil {
+		return room
 	}
 
-	room := chatRoom{
+	room = chatRoom{
 		ClientA: &userA,
 		ClientB: &userB,
 	}
