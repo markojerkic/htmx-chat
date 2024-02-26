@@ -7,6 +7,7 @@ import (
 )
 
 func OpenRoomPartialHandler(c echo.Context) error {
+	c.Logger().Debug("OpenRoomPartialHandler")
 
 	roomId := c.Param("id")
 
@@ -17,8 +18,12 @@ func OpenRoomPartialHandler(c echo.Context) error {
 		return c.String(404, "Room not found")
 	}
 
+	c.Logger().Debugf("Room: %v", room)
+
 	currentUser := c.Get("user").(auth.User)
 	requestedUser := room.GetClientWhichIsNotMe(currentUser.ID)
+
+	c.Logger().Debugf("Requested user: %v", requestedUser)
 
 	chatComponent := Chat(requestedUser.ID, requestedUser.Name)
 

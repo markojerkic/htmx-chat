@@ -13,7 +13,6 @@ func main() {
 	e := echo.New()
 	e.Debug = true
 
-	// e.Use(middleware.Logger())
 	sessionMiddleware := session.Middleware(sessions.NewCookieStore([]byte("secret")))
 	e.Use(sessionMiddleware)
 
@@ -21,7 +20,7 @@ func main() {
 
 	restricted.GET("/", room.AllRoomsHandler)
 
-	restricted.GET("/chat/:id/open", room.OpenRoomPartialHandler)
+	restricted.GET("/room/:id/open", room.OpenRoomPartialHandler)
 	restricted.GET("/room/:id", room.OpenRoomHandler)
 
 	restricted.GET("/room/new", room.SearchUsersFormHandler)
