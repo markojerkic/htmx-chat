@@ -1,6 +1,7 @@
 package room
 
 import (
+	"fmt"
 	"htmx-chat/auth"
 	"strings"
 
@@ -50,6 +51,10 @@ func AllRoomsHandler(c echo.Context) error {
 		if err != nil {
 			return c.String(404, "Room not found")
 		}
+		if !room.IsUserInRoom(c.Get("user").(auth.User).ID) {
+			return c.Redirect(302, "/")
+		}
+
 		selectedRoom = &room
 	}
 
@@ -71,6 +76,10 @@ func openRoomWithRoomListPartialHandler(c echo.Context) error {
 	}
 
 	room := RoomsStore.AddRoom(currentUsrer, *requestUser)
+	if !room.IsUserInRoom(c.Get("user").(auth.User).ID) {
+		c.Response().Header().Set("HX-Redirect", "/")
+		return c.String(403, "You are not allowed to see this room")
+	}
 
 	c.Logger().Infof("Room: %v", room)
 
@@ -79,6 +88,7 @@ func openRoomWithRoomListPartialHandler(c echo.Context) error {
 	roomsComponent := createNewRoom(rooms, room, currentUsrer)
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
+	c.Response().Header().Set("Hx-Push-Url", fmt.Sprintf("/room/%s", room.ID))
 
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
 }

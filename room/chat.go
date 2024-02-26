@@ -10,10 +10,13 @@ func openRoomPartialHandler(c echo.Context) error {
 	roomId := c.Param("id")
 
 	room, err := RoomsStore.GetRoom(roomId)
-
 	if err != nil {
 		c.Logger().Error("Error getting requested room", err)
 		return c.String(404, "Room not found")
+	}
+	if !room.IsUserInRoom(c.Get("user").(auth.User).ID) {
+		c.Response().Header().Set("HX-Redirect", "/")
+		return c.String(403, "You are not allowed to see this room")
 	}
 
 	c.Logger().Debugf("Room: %v", room)

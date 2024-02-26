@@ -18,6 +18,10 @@ func (r *chatRoom) GetClientWhichIsNotMe(myId string) auth.User {
 	return auth.User(*r.ClientA)
 }
 
+func (r *chatRoom) IsUserInRoom(userID string) bool {
+	return r.ClientA.ID == userID || r.ClientB.ID == userID
+}
+
 func (r chatRoom) GetID() string {
 	return r.ID
 }
