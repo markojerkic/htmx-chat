@@ -22,8 +22,9 @@ func (r chatRoom) GetID() string {
 	return r.ID
 }
 
-func (r chatRoom) SetID(ID string) {
+func (r chatRoom) SetID(ID string) db.Item {
 	r.ID = ID
+	return r
 }
 
 type roomStore struct {

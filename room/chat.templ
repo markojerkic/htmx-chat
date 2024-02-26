@@ -1,4 +1,4 @@
-package chat
+package room
 
 templ chatLayout() {
 	<div id="chat" class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
@@ -6,8 +6,16 @@ templ chatLayout() {
 	</div>
 }
 
-templ Chat() {
+templ chatPersonHeader(userID string, userName string) {
+	<div class="flex items-center">
+		<img src="https://via.placeholder.com/50" class="w-12 h-12 rounded-full" alt="user"/>
+		<span class="ml-4 font-bold">{userName}</span>
+	</div>
+}
+
+templ Chat(userID string, userName string) {
 	@chatLayout() {
+		@chatPersonHeader(userID, userName)
 		<div class="w-full grow bg-blue-200">
 			Ovdje će doći sve poruke
 		</div>

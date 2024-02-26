@@ -2,7 +2,6 @@ package main
 
 import (
 	"htmx-chat/auth"
-	"htmx-chat/chat"
 	"htmx-chat/room"
 
 	"github.com/gorilla/sessions"
@@ -22,10 +21,10 @@ func main() {
 
 	restricted.GET("/", room.AllRoomsHandler)
 
-	restricted.GET("/chat/:id", chat.OpenChatHandler)
-	restricted.GET("/room/:id", room.OpenChatHandler)
+	restricted.GET("/chat/:id/open", room.OpenRoomPartialHandler)
+	restricted.GET("/room/:id", room.OpenRoomHandler)
 
-	restricted.GET("/room/new", room.NewRoomHandler)
+	restricted.GET("/room/new", room.SearchUsersFormHandler)
 	restricted.GET("/room/search", room.SearchUsersNewRoom)
 
 	e.GET("/register", auth.RegisterViewHandler)

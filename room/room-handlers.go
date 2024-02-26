@@ -27,7 +27,7 @@ func SearchUsersNewRoom(c echo.Context) error {
 	return newRoomUsersList(filteredUsers).Render(c.Request().Context(), c.Response().Writer)
 }
 
-func NewRoomHandler(c echo.Context) error {
+func SearchUsersFormHandler(c echo.Context) error {
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 
@@ -48,7 +48,7 @@ func AllRoomsHandler(c echo.Context) error {
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
 }
 
-func OpenChatHandler(c echo.Context) error {
+func OpenRoomHandler(c echo.Context) error {
 	currentUsrer := c.Get("user").(auth.User)
 
 	requestUserId := c.Param("id")
@@ -64,7 +64,7 @@ func OpenChatHandler(c echo.Context) error {
 
 	rooms := RoomsStore.GetAllMyRooms(currentUsrer)
 
-	roomsComponent := createNewRoom(rooms, requestUserId, currentUsrer)
+	roomsComponent := createNewRoom(rooms, room, currentUsrer)
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 

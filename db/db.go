@@ -3,14 +3,15 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	guuid "github.com/google/uuid"
 	"os"
 	"sync"
+
+	guuid "github.com/google/uuid"
 )
 
 type Item interface {
 	GetID() string
-	SetID(ID string)
+	SetID(ID string) Item
 }
 type Collection[T Item] struct {
 	lock   sync.RWMutex
@@ -68,10 +69,12 @@ func (c *Collection[T]) Save(item T) (T, error) {
 	var id string
 
 	if item.GetID() != "" {
+		fmt.Println("Item already has an ID: '", item.GetID(), "'")
 		id = item.GetID()
 	} else {
+		fmt.Println("Item does not have an ID, creating new")
 		id = guuid.New().String()
-		item.SetID(id)
+		item = item.SetID(id).(T)
 	}
 
 	c.values[id] = item
