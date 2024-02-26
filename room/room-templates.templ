@@ -5,7 +5,8 @@ import "htmx-chat/templates"
 import "htmx-chat/auth"
 
 templ userPreview(user auth.User) {
-<img class="h-12 w-12 flex-none rounded-full bg-gray-50"
+<img class="h-12 w-12 flex-none rounded-full bg-gray-50" src={
+	fmt.Sprintf("https://api.dicebear.com/7.x/adventurer/svg?seed=%s", user.Name) }
 	src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" />
 <div class="min-w-0 flex flex-col">
 	<p class="text-sm font-semibold leading-6 text-gray-900">{ user.Name }</p>
@@ -41,9 +42,9 @@ templ allRooms(rooms []chatRoom, currentUser auth.User, room *chatRoom) {
 <div id="chat-with-rooms" class="p-4 grid grid-cols-4 gap-x-4 h-screen border border-black">
 	@roomsList(rooms, currentUser.ID)
 	if room != nil {
-		@Chat(room.GetClientWhichIsNotMe(currentUser.ID).ID, room.GetClientWhichIsNotMe(currentUser.ID).Name)
+	@Chat(room.GetClientWhichIsNotMe(currentUser.ID).ID, room.GetClientWhichIsNotMe(currentUser.ID).Name)
 	} else {
-		@EmptyChat()
+	@EmptyChat()
 	}
 </div>
 }

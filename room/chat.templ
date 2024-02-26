@@ -1,30 +1,33 @@
 package room
 
+import "fmt"
+
 templ chatLayout() {
-	<div id="chat" class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
-		{ children... }
-	</div>
+<div id="chat" class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
+	{ children... }
+</div>
 }
 
 templ chatPersonHeader(userID string, userName string) {
-	<div class="flex items-center">
-		<img src="https://via.placeholder.com/50" class="w-12 h-12 rounded-full" alt="user"/>
-		<span class="ml-4 font-bold">{userName}</span>
-	</div>
+<div class="flex items-center">
+	<img src={ fmt.Sprintf("https://api.dicebear.com/7.x/adventurer/svg?seed=%s", userName) }
+		class="w-12 h-12 rounded-full" alt="user" />
+	<span class="ml-4 font-bold">{ userName }</span>
+</div>
 }
 
 templ Chat(userID string, userName string) {
-	@chatLayout() {
-		@chatPersonHeader(userID, userName)
-		<div class="w-full grow bg-blue-200">
-			Ovdje će doći sve poruke
-		</div>
-		<input type="text" class="w-full h-12 border border-black rounded-md" placeholder="Unesite sljedeću poruku"/>
-	}
+@chatLayout() {
+@chatPersonHeader(userID, userName)
+<div class="w-full grow bg-blue-200">
+	Ovdje će doći sve poruke
+</div>
+<input type="text" class="w-full h-12 border border-black rounded-md" placeholder="Unesite sljedeću poruku" />
+}
 }
 
 templ EmptyChat() {
-	@chatLayout() {
-		<span>Odaberite sobu</span>
-	}
+@chatLayout() {
+<span>Odaberite sobu</span>
+}
 }
