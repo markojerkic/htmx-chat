@@ -41,14 +41,26 @@ func AllRoomsHandler(c echo.Context) error {
 
 	rooms := RoomsStore.GetAllMyRooms(currentUsrer)
 
-	roomsComponent := allRooms(rooms, currentUsrer)
+	var selectedRoom *chatRoom
+
+	if c.Param("id") != "" {
+		c.Logger().Debug("Request for a room")
+		room, err := RoomsStore.GetRoom(c.Param("id"))
+
+		if err != nil {
+			return c.String(404, "Room not found")
+		}
+		selectedRoom = &room
+	}
+
+	roomsComponent := allRooms(rooms, currentUsrer, selectedRoom)
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
 }
 
-func OpenRoomHandler(c echo.Context) error {
+func openRoomWithRoomListPartialHandler(c echo.Context) error {
 	currentUsrer := c.Get("user").(auth.User)
 
 	requestUserId := c.Param("id")
@@ -69,4 +81,20 @@ func OpenRoomHandler(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
+}
+
+// Check if the request is an HX request
+// If it is, get the room ID from the request and get the room from the store
+func RoomHandler(c echo.Context) error {
+	if c.Request().Header.Get("Hx-Request") == "true" {
+		if c.Request().Header.Get("Hx-Target") == "chat" {
+			// Clicked on the room from the list
+			return openRoomPartialHandler(c)
+		}
+		// Creating new room from search result
+		return openRoomWithRoomListPartialHandler(c)
+	}
+
+	// Normal request, return the full page
+	return AllRoomsHandler(c)
 }

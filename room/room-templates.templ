@@ -15,8 +15,8 @@ templ userPreview(user auth.User) {
 
 templ roomPreview(room chatRoom, currentUserId string) {
 <li class="flex justify-between gap-x-6 py-5 hover:bg-gray-200">
-	<span class="flex min-w-0 gap-x-4 hover:cursor-pointer" hx-get={ fmt.Sprintf("/room/%s/open", room.ID) }
-		hx-trigger="click" hx-target="#chat" hx-swap="outerHTML">
+	<span class="flex min-w-0 gap-x-4 hover:cursor-pointer" hx-get={ fmt.Sprintf("/room/%s", room.ID) }
+		hx-push-url="true" hx-trigger="click" hx-target="#chat" hx-swap="outerHTML">
 		@userPreview(room.GetClientWhichIsNotMe(currentUserId))
 	</span>
 </li>
@@ -36,11 +36,15 @@ templ roomsList(rooms []chatRoom, currentUserId string) {
 </div>
 }
 
-templ allRooms(rooms []chatRoom, currentUser auth.User) {
+templ allRooms(rooms []chatRoom, currentUser auth.User, room *chatRoom) {
 @templates.Layout() {
 <div id="chat-with-rooms" class="p-4 grid grid-cols-4 gap-x-4 h-screen border border-black">
 	@roomsList(rooms, currentUser.ID)
-	@EmptyChat()
+	if room != nil {
+		@Chat(room.GetClientWhichIsNotMe(currentUser.ID).ID, room.GetClientWhichIsNotMe(currentUser.ID).Name)
+	} else {
+		@EmptyChat()
+	}
 </div>
 }
 }
@@ -60,7 +64,7 @@ templ newRoomUsersList(users []auth.User) {
 for _, user := range users {
 <li class="flex justify-between gap-x-6 py-5 hover:bg-gray-200">
 	<span class="flex min-w-0 gap-x-4 hover:cursor-pointer" hx-get={ fmt.Sprintf("/room/%s", user.ID) }
-		hx-target="#chat-with-rooms">
+		hx-push-url="true" hx-target="#chat-with-rooms">
 		@userPreview(user)
 	</span>
 </li>

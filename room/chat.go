@@ -6,9 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func OpenRoomPartialHandler(c echo.Context) error {
-	c.Logger().Debug("OpenRoomPartialHandler")
-
+func openRoomPartialHandler(c echo.Context) error {
 	roomId := c.Param("id")
 
 	room, err := RoomsStore.GetRoom(roomId)

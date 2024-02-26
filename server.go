@@ -16,12 +16,11 @@ func main() {
 	sessionMiddleware := session.Middleware(sessions.NewCookieStore([]byte("secret")))
 	e.Use(sessionMiddleware)
 
-	restricted := e.Group("", auth.AuthMiddleware);
+	restricted := e.Group("", auth.AuthMiddleware)
 
 	restricted.GET("/", room.AllRoomsHandler)
 
-	restricted.GET("/room/:id/open", room.OpenRoomPartialHandler)
-	restricted.GET("/room/:id", room.OpenRoomHandler)
+	restricted.GET("/room/:id", room.RoomHandler)
 
 	restricted.GET("/room/new", room.SearchUsersFormHandler)
 	restricted.GET("/room/search", room.SearchUsersNewRoom)
