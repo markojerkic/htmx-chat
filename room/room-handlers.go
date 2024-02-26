@@ -7,22 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type client auth.User
-
-type chatRoom struct {
-	ID      string
-	ClientA *client
-	ClientB *client
-}
-
-func (r *chatRoom) GetClientWhichIsNotMe(myId string) auth.User {
-	if r.ClientA.ID == myId {
-		return auth.User(*r.ClientB)
-	}
-
-	return auth.User(*r.ClientA)
-}
-
 func SearchUsersNewRoom(c echo.Context) error {
 	users := auth.UsersStore.GetAllUsers(&c)
 
@@ -48,7 +32,6 @@ func NewRoomHandler(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 
 	users := auth.UsersStore.GetAllUsers(&c)
-	c.Logger().Infof("Users: %v", users)
 
 	return newRoom(users).Render(c.Request().Context(), c.Response().Writer)
 }
@@ -56,7 +39,7 @@ func NewRoomHandler(c echo.Context) error {
 func AllRoomsHandler(c echo.Context) error {
 	currentUsrer := c.Get("user").(auth.User)
 
-	rooms := []chatRoom{}
+	rooms := RoomsStore.GetAllMyRooms(currentUsrer)
 
 	roomsComponent := allRooms(rooms, currentUsrer)
 
@@ -68,9 +51,18 @@ func AllRoomsHandler(c echo.Context) error {
 func OpenChatHandler(c echo.Context) error {
 	currentUsrer := c.Get("user").(auth.User)
 
-	rooms := []chatRoom{}
-
 	requestUserId := c.Param("id")
+
+	requestUser := auth.UsersStore.GetUserById(requestUserId)
+	if requestUser == nil {
+		return c.String(404, "User not found")
+	}
+
+	room := RoomsStore.AddRoom(currentUsrer, *requestUser)
+
+	c.Logger().Infof("Room: %v", room)
+
+	rooms := RoomsStore.GetAllMyRooms(currentUsrer)
 
 	roomsComponent := createNewRoom(rooms, requestUserId, currentUsrer)
 

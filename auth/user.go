@@ -65,6 +65,17 @@ func (r *RegisteredUsers) Add(user User) {
 	r.syncToFile()
 }
 
+func (r *RegisteredUsers) GetUserById(id string) *User {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	if user, ok := r.users[id]; ok {
+		return &user
+	}
+
+	return nil
+}
+
 // Get list of all users which are not the user querying
 func (r *RegisteredUsers) GetAllUsers(c *echo.Context) []User {
 	r.lock.RLock()
