@@ -70,12 +70,12 @@ func openRoomWithRoomListPartialHandler(c echo.Context) error {
 
 	requestUserId := c.Param("id")
 
-	requestUser := auth.UsersStore.GetUserById(requestUserId)
-	if requestUser == nil {
+	requestUser, err := auth.UsersStore.GetUserById(requestUserId)
+	if err != nil {
 		return c.String(404, "User not found")
 	}
 
-	room := RoomsStore.AddRoom(currentUsrer, *requestUser)
+	room := RoomsStore.AddRoom(currentUsrer, requestUser)
 	if !room.IsUserInRoom(c.Get("user").(auth.User).ID) {
 		c.Response().Header().Set("HX-Redirect", "/")
 		return c.String(403, "You are not allowed to see this room")

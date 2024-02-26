@@ -1,10 +1,7 @@
 package auth
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"sync"
+	"htmx-chat/db"
 
 	"github.com/labstack/echo/v4"
 )
@@ -14,85 +11,39 @@ type User struct {
 	Name string `form:"name" json:"name"`
 }
 
-type RegisteredUsers struct {
-	lock  sync.RWMutex
-	users map[string]User
+func (u User) GetID() string {
+	return u.ID
 }
 
-func (r *RegisteredUsers) syncToFile() {
-	// write r.users to byte array
-	users, err := json.Marshal(r.users)
-	if err != nil {
-		fmt.Println("Error marshalling users")
-		panic(err)
-	}
+func (u User) SetID(ID string) db.Item {
+	u.ID = ID
+	return u
+}
 
-	err = os.WriteFile("/tmp/chat-users", []byte(users), 0777)
-
-	if err != nil {
-		fmt.Println("Error writing users to file")
-		panic(err)
-	}
+type RegisteredUsers struct {
+	users *db.Collection[User]
 }
 
 func newRegisteredUsers() *RegisteredUsers {
-	users, err := os.ReadFile("/tmp/chat-users")
-
-	var usersMap map[string]User
-	if err != nil {
-		fmt.Println("No users file found, creating new")
-		usersMap = make(map[string]User)
-	} else {
-		err = json.Unmarshal(users, &usersMap)
-		fmt.Println("Read users from file", usersMap)
-		if err != nil {
-			fmt.Println("Error unmarshalling users")
-			panic(err)
-		}
-	}
-
 	return &RegisteredUsers{
-		users: usersMap,
-		lock:  sync.RWMutex{},
+		users: db.NewCollection[User]("users"),
 	}
 }
 
 func (r *RegisteredUsers) Add(user User) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-
-	r.users[user.ID] = user
-	r.syncToFile()
+	r.users.Save(user)
 }
 
-func (r *RegisteredUsers) GetUserById(id string) *User {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-
-	if user, ok := r.users[id]; ok {
-		return &user
-	}
-
-	return nil
+func (r *RegisteredUsers) GetUserById(id string) (User, error) {
+	return r.users.Get(id)
 }
 
 // Get list of all users which are not the user querying
 func (r *RegisteredUsers) GetAllUsers(c *echo.Context) []User {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-
 	currentUsrer := (*c).Get("user").(User)
-
-	var users = make([]User, 0, len(r.users))
-
-	for _, user := range r.users {
-		if user.ID != currentUsrer.ID {
-			users = append(users, user)
-		} else {
-			(*c).Logger().Infof("Skipping user %s", user.ID)
-		}
-	}
-	return users
+	return r.users.GetAllByPredicate(func(user User) bool {
+		return user.ID != currentUsrer.ID
+	})
 }
 
 var UsersStore = newRegisteredUsers()
