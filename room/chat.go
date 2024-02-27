@@ -63,40 +63,23 @@ func ConnectToRoom(c echo.Context) error {
 
 	room.wsClients[roomId] = ws
 
-	c.Logger().Debug("Start Waiting for message")
 	for {
 
-		// 	ws.WriteMessage(websocket.TextMessage, []byte(`
-		// 	<div id="messages" hx-swap-oob="beforeend">
-		// 	<div class="bg-rose-500 w-full p-4">
-		// 	Moja neka nova poruka
-		// 	</div>
-		// 	</div>
-		// `))
-
-		// Read
-		c.Logger().Debug("Waiting for message")
 		_, msg, err := ws.ReadMessage()
 		if err != nil {
 			c.Logger().Error(err)
+			return err
 		}
 		var message map[string]string
 		err = json.Unmarshal(msg, &message)
 		if err != nil {
 			c.Logger().Error(err)
+			return err
 		}
-		fmt.Printf("message: %s\n", msg)
-		fmt.Printf("message: %s\n", message["message"])
 
 		renderedMessage := new(bytes.Buffer)
 		chatBubble(true, message["message"]).Render(context.Background(), renderedMessage)
 
 		ws.WriteMessage(websocket.TextMessage, renderedMessage.Bytes())
 	}
-
-	return err
-}
-
-type wsMessage struct {
-	message string `json:"message"`
 }

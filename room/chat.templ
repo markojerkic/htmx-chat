@@ -1,56 +1,78 @@
 package room
 
 import "fmt"
+import "time"
 
 templ chatLayout(roomId *string) {
-if roomId == nil {
-<div id="chat" class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
-	{ children... }
-</div>
-}
-<div id="chat" hx-ext="ws" ws-connect={ fmt.Sprintf("/room/%s/connect", *roomId) }
-	class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
-	{ children... }
-</div>
+	if roomId == nil {
+		<div id="chat" class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
+			{ children... }
+		</div>
+	}
+	<div
+		id="chat"
+		hx-ext="ws"
+		ws-connect={ fmt.Sprintf("/room/%s/connect", *roomId) }
+		class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md"
+	>
+		{ children... }
+	</div>
 }
 
 templ chatPersonHeader(userID string, userName string) {
-<div class="flex items-center">
-	<img src={ fmt.Sprintf("https://api.dicebear.com/7.x/adventurer/svg?seed=%s", userName) }
-		class="w-12 h-12 rounded-full" alt="user" />
-	<span class="ml-4 font-bold">{ userName }</span>
-</div>
+	<div class="flex items-center">
+		<img
+			src={ fmt.Sprintf("https://api.dicebear.com/7.x/adventurer/svg?seed=%s", userName) }
+			class="w-12 h-12 rounded-full"
+			alt="user"
+		/>
+		<span class="ml-4 font-bold">{ userName }</span>
+	</div>
 }
 
 templ chatBubble(isMine bool, message string) {
-<div id="messages" hx-swap-oob="beforeend">
-if isMine {
-	<div class="rounded-lg items-center px-4 py-2 w-fit max-w-[80%] bg-purple-500 dark:bg-purple-700 self-end">
-		<p class="text-white">{ message }</p>
-		<time class="text-xs text-gray-500 dark:text-gray-400">11:46 AM</time>
+	<div id="messages" hx-swap-oob="beforeend">
+		if isMine {
+			<div
+				class="rounded-t-lg rounded-l-lg items-center px-4 py-2 w-fit max-w-[80%] bg-purple-500 dark:bg-purple-700 self-end"
+			>
+				<p class="text-white">{ message }</p>
+				<time class="text-xs text-gray-500 dark:text-gray-400">{ time.Now().Format("22:00") }</time>
+			</div>
+		}
 	</div>
-}
-</div>
-<!-- </div> -->
 }
 
 templ Chat(userID string, userName string, roomId string) {
-<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
-@chatLayout(&roomId) {
-@chatPersonHeader(userID, userName)
-<div class="w-full grow bg-blue-200">
-	<article id="messages" class="max-h-[75vh] p-2 overflow-y-auto flex flex-col space-y-2"></article>
-</div>
-<form id="chatForm" ws-send>
-	<input type="text" name="message" class="w-full h-12 border border-black rounded-md"
-		placeholder="Unesite sljedeću poruku" />
-	<button type="submit">Send</button>
-</form>
-}
+	<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+	@chatLayout(&roomId) {
+		@chatPersonHeader(userID, userName)
+		<div class="w-full grow bg-blue-200">
+			<article id="messages" class="max-h-[75vh] p-2 overflow-y-auto flex flex-col space-y-2"></article>
+		</div>
+		<form id="chatForm" ws-send>
+			<input
+				type="text"
+				name="message"
+				class="w-full p-1 h-12 border border-black rounded-md"
+				placeholder="Unesite sljedeću poruku"
+			/>
+			<!-- <button type="submit">Send</button> -->
+			<script>
+		htmx.on("htmx:wsAfterSend", function (e) {
+			e.srcElement.querySelector("input").value = ""
+		})
+		htmx.on("htmx:wsAfterMessage", function (e) {
+			const messagesDiv = document.querySelector("#messages")
+			messagesDiv.scrollTop = messagesDiv.scrollHeight;
+		})
+	</script>
+		</form>
+	}
 }
 
 templ EmptyChat() {
-@chatLayout(nil) {
-<span>Odaberite sobu</span>
-}
+	@chatLayout(nil) {
+		<span>Odaberite sobu</span>
+	}
 }
