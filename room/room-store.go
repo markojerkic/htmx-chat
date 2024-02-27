@@ -41,7 +41,7 @@ func (r *roomStore) GetAllMyRooms(user auth.User) []chatRoom {
 	})
 }
 
-func (r *roomStore) AddRoom(userA auth.User, userB auth.User) chatRoom {
+func (r *roomStore) AddRoom(userA auth.User, userB auth.User) (chatRoom, error) {
 	room, err := r.rooms.GetByPredicate(func(room chatRoom) bool {
 		isClientA := room.ClientA.ID == userA.ID || room.ClientA.ID == userB.ID
 		isClientB := room.ClientB.ID == userA.ID || room.ClientB.ID == userB.ID
@@ -50,7 +50,7 @@ func (r *roomStore) AddRoom(userA auth.User, userB auth.User) chatRoom {
 	})
 
 	if err == nil {
-		return room
+		return room, nil
 	}
 
 	room = chatRoom{
@@ -58,8 +58,7 @@ func (r *roomStore) AddRoom(userA auth.User, userB auth.User) chatRoom {
 		ClientB: &userB,
 	}
 
-	r.rooms.Save(room)
-	return room
+	return r.rooms.Save(room)
 }
 
 func (r *roomStore) GetRoom(id string) (chatRoom, error) {

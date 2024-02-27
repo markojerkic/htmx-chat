@@ -65,7 +65,7 @@ func AllRoomsHandler(c echo.Context) error {
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
 }
 
-func openRoomWithRoomListPartialHandler(c echo.Context) error {
+func createRoomWithRoomListPartialHandler(c echo.Context) error {
 	currentUsrer := c.Get("user").(auth.User)
 
 	requestUserId := c.Param("id")
@@ -75,7 +75,10 @@ func openRoomWithRoomListPartialHandler(c echo.Context) error {
 		return c.String(404, "User not found")
 	}
 
-	room := RoomsStore.AddRoom(currentUsrer, requestUser)
+	room, err := RoomsStore.AddRoom(currentUsrer, requestUser)
+	if err != nil {
+		return c.String(500, "Error creating room")
+	}
 	if !room.IsUserInRoom(c.Get("user").(auth.User).ID) {
 		c.Response().Header().Set("HX-Redirect", "/")
 		return c.String(403, "You are not allowed to see this room")
@@ -88,6 +91,7 @@ func openRoomWithRoomListPartialHandler(c echo.Context) error {
 	roomsComponent := createNewRoom(rooms, room, currentUsrer)
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
+	c.Logger().Infof("Room: %s", room.ID)
 	c.Response().Header().Set("Hx-Push-Url", fmt.Sprintf("/room/%s", room.ID))
 
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
@@ -102,7 +106,7 @@ func RoomHandler(c echo.Context) error {
 			return openRoomPartialHandler(c)
 		}
 		// Creating new room from search result
-		return openRoomWithRoomListPartialHandler(c)
+		return createRoomWithRoomListPartialHandler(c)
 	}
 
 	// Normal request, return the full page
