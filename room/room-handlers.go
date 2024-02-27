@@ -49,7 +49,7 @@ func AllRoomsHandler(c echo.Context) error {
 		room, err := RoomsStore.GetRoom(c.Param("id"))
 
 		if err != nil {
-			return c.String(404, "Room not found")
+			return c.Redirect(302, "/")
 		}
 		if !room.IsUserInRoom(c.Get("user").(auth.User).ID) {
 			return c.Redirect(302, "/")

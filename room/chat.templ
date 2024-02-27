@@ -2,8 +2,14 @@ package room
 
 import "fmt"
 
-templ chatLayout() {
+templ chatLayout(roomId *string) {
+if roomId == nil {
 <div id="chat" class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
+	{ children... }
+</div>
+}
+<div id="chat" hx-ext="ws" ws-connect={ fmt.Sprintf("/room/%s/connect", *roomId) }
+	class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
 	{ children... }
 </div>
 }
@@ -16,18 +22,35 @@ templ chatPersonHeader(userID string, userName string) {
 </div>
 }
 
-templ Chat(userID string, userName string) {
-@chatLayout() {
+templ chatBubble(isMine bool, message string) {
+<div id="messages" hx-swap-oob="beforeend">
+if isMine {
+	<div class="rounded-lg items-center px-4 py-2 w-fit max-w-[80%] bg-purple-500 dark:bg-purple-700 self-end">
+		<p class="text-white">{ message }</p>
+		<time class="text-xs text-gray-500 dark:text-gray-400">11:46 AM</time>
+	</div>
+}
+</div>
+<!-- </div> -->
+}
+
+templ Chat(userID string, userName string, roomId string) {
+<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+@chatLayout(&roomId) {
 @chatPersonHeader(userID, userName)
 <div class="w-full grow bg-blue-200">
-	Ovdje će doći sve poruke
+	<article id="messages" class="max-h-[75vh] p-2 overflow-y-auto flex flex-col space-y-2"></article>
 </div>
-<input type="text" class="w-full h-12 border border-black rounded-md" placeholder="Unesite sljedeću poruku" />
+<form id="chatForm" ws-send>
+	<input type="text" name="message" class="w-full h-12 border border-black rounded-md"
+		placeholder="Unesite sljedeću poruku" />
+	<button type="submit">Send</button>
+</form>
 }
 }
 
 templ EmptyChat() {
-@chatLayout() {
+@chatLayout(nil) {
 <span>Odaberite sobu</span>
 }
 }

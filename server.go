@@ -25,6 +25,8 @@ func main() {
 	restricted.GET("/room/new", room.SearchUsersFormHandler)
 	restricted.GET("/room/search", room.SearchUsersNewRoom)
 
+	restricted.GET("/room/:id/connect", room.ConnectToRoom)
+
 	e.GET("/register", auth.RegisterViewHandler)
 	e.POST("/register", auth.RegisterHandler)
 

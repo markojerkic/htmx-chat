@@ -3,12 +3,15 @@ package room
 import (
 	"htmx-chat/auth"
 	"htmx-chat/db"
+
+	"github.com/gorilla/websocket"
 )
 
 type chatRoom struct {
-	ID      string
-	ClientA *auth.User
-	ClientB *auth.User
+	ID        string
+	ClientA   *auth.User
+	ClientB   *auth.User
+	wsClients map[string]*websocket.Conn `json:'-'`
 }
 
 func (r *chatRoom) GetClientWhichIsNotMe(myId string) auth.User {
@@ -56,13 +59,20 @@ func (r *roomStore) AddRoom(userA auth.User, userB auth.User) (chatRoom, error) 
 	room = chatRoom{
 		ClientA: &userA,
 		ClientB: &userB,
+		wsClients: make(map[string]*websocket.Conn),
 	}
 
 	return r.rooms.Save(room)
 }
 
 func (r *roomStore) GetRoom(id string) (chatRoom, error) {
-	return r.rooms.Get(id)
+	room, err := r.rooms.Get(id)
+
+	if err == nil && room.wsClients == nil {
+		room.wsClients = make(map[string]*websocket.Conn)
+	}
+
+	return room, err
 }
 
 func newRoomStore() *roomStore {

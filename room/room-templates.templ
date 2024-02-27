@@ -33,7 +33,7 @@ templ roomsList(rooms []chatRoom, currentUserId string) {
 		@roomPreview(room, currentUserId)
 		}
 	</ul>
-	<a class="p-2 bg-rose-500 text-white hover:bg-rose-700 " href="/register">Sign out</a>
+	<a class="p-2 bg-rose-500 text-white hover:bg-rose-700" href="/register">Sign out</a>
 </div>
 }
 
@@ -42,7 +42,7 @@ templ allRooms(rooms []chatRoom, currentUser auth.User, room *chatRoom) {
 <div id="chat-with-rooms" class="p-4 grid grid-cols-4 gap-x-4 h-screen border border-black">
 	@roomsList(rooms, currentUser.ID)
 	if room != nil {
-	@Chat(room.GetClientWhichIsNotMe(currentUser.ID).ID, room.GetClientWhichIsNotMe(currentUser.ID).Name)
+	@Chat(room.GetClientWhichIsNotMe(currentUser.ID).ID, room.GetClientWhichIsNotMe(currentUser.ID).Name, room.ID)
 	} else {
 	@EmptyChat()
 	}
@@ -74,5 +74,5 @@ for _, user := range users {
 
 templ createNewRoom(rooms []chatRoom, newRoom chatRoom, currentUser auth.User) {
 @roomsList(rooms, currentUser.ID)
-@Chat(newRoom.GetClientWhichIsNotMe(currentUser.ID).ID, newRoom.GetClientWhichIsNotMe(currentUser.ID).Name)
+@Chat(newRoom.GetClientWhichIsNotMe(currentUser.ID).ID, newRoom.GetClientWhichIsNotMe(currentUser.ID).Name, newRoom.ID)
 }
