@@ -3,23 +3,24 @@ package room
 import "fmt"
 import "time"
 
-templ chatLayout(roomId *string) {
-	if roomId == nil {
+templ chatLayout(roomId string) {
+	if roomId == "" {
 		<div id="chat" class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md">
 			{ children... }
 		</div>
+	} else {
+		<div
+			id="chat"
+			hx-ext="ws"
+			ws-connect={ fmt.Sprintf("/room/%s/connect", roomId) }
+			class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md"
+		>
+			{ children... }
+		</div>
 	}
-	<div
-		id="chat"
-		hx-ext="ws"
-		ws-connect={ fmt.Sprintf("/room/%s/connect", *roomId) }
-		class="p-4 col-span-3 w-full h-full flex flex-col justify-between border border-black rounded-md"
-	>
-		{ children... }
-	</div>
 }
 
-templ chatPersonHeader(userID string, userName string) {
+templ chatPersonHeader(_userID string, userName string) {
 	<div class="flex items-center">
 		<img
 			src={ fmt.Sprintf("https://api.dicebear.com/7.x/adventurer/svg?seed=%s", userName) }
@@ -45,7 +46,7 @@ templ chatBubble(isMine bool, message string) {
 
 templ Chat(userID string, userName string, roomId string) {
 	<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
-	@chatLayout(&roomId) {
+	@chatLayout(roomId) {
 		@chatPersonHeader(userID, userName)
 		<div class="w-full grow bg-blue-200">
 			<article id="messages" class="max-h-[75vh] p-2 overflow-y-auto flex flex-col space-y-2"></article>
@@ -72,7 +73,7 @@ templ Chat(userID string, userName string, roomId string) {
 }
 
 templ EmptyChat() {
-	@chatLayout(nil) {
+	@chatLayout("") {
 		<span>Odaberite sobu</span>
 	}
 }

@@ -9,20 +9,36 @@ import (
 
 type chatRoom struct {
 	ID        string
-	ClientA   *auth.User
-	ClientB   *auth.User
+	ClientAID string
+	ClientBID string
 	wsClients map[string]*websocket.Conn `json:'-'`
 }
 
+func (c chatRoom) GetUserA() (*auth.User, error) {
+	return auth.UsersStore.GetUserById(c.ClientAID)
+}
+
+func (c chatRoom) GetUserB() (*auth.User, error) {
+	return auth.UsersStore.GetUserById(c.ClientBID)
+}
+
 func (r *chatRoom) GetClientWhichIsNotMe(myId string) auth.User {
-	if r.ClientA.ID == myId {
-		return auth.User(*r.ClientB)
+	if r.ClientAID == myId {
+		user, err := r.GetUserB()
+		if err != nil {
+			panic(err)
+		}
+		return *user
 	}
-	return auth.User(*r.ClientA)
+	user, err := r.GetUserA()
+	if err != nil {
+		panic(err)
+	}
+	return *user
 }
 
 func (r *chatRoom) IsUserInRoom(userID string) bool {
-	return r.ClientA.ID == userID || r.ClientB.ID == userID
+	return r.ClientAID == userID || r.ClientBID == userID
 }
 
 func (r chatRoom) GetID() string {
@@ -40,14 +56,14 @@ type roomStore struct {
 
 func (r *roomStore) GetAllMyRooms(user auth.User) []chatRoom {
 	return r.rooms.GetAllByPredicate(func(room chatRoom) bool {
-		return room.ClientA.ID == user.ID || room.ClientB.ID == user.ID
+		return room.ClientAID == user.ID || room.ClientBID == user.ID
 	})
 }
 
 func (r *roomStore) AddRoom(userA auth.User, userB auth.User) (chatRoom, error) {
 	room, err := r.rooms.GetByPredicate(func(room chatRoom) bool {
-		isClientA := room.ClientA.ID == userA.ID || room.ClientA.ID == userB.ID
-		isClientB := room.ClientB.ID == userA.ID || room.ClientB.ID == userB.ID
+		isClientA := room.ClientAID == userA.ID || room.ClientAID == userB.ID
+		isClientB := room.ClientBID == userA.ID || room.ClientBID == userB.ID
 
 		return isClientA && isClientB
 	})
@@ -57,15 +73,15 @@ func (r *roomStore) AddRoom(userA auth.User, userB auth.User) (chatRoom, error) 
 	}
 
 	room = chatRoom{
-		ClientA: &userA,
-		ClientB: &userB,
+		ClientAID: userA.ID,
+		ClientBID: userB.ID,
 		wsClients: make(map[string]*websocket.Conn),
 	}
 
 	return r.rooms.Save(room)
 }
 
-func (r *roomStore) GetRoom(id string) (chatRoom, error) {
+func (r *roomStore) GetRoom(id string) (*chatRoom, error) {
 	room, err := r.rooms.Get(id)
 
 	if err == nil && room.wsClients == nil {

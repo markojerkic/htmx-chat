@@ -84,17 +84,17 @@ func (c *Collection[T]) Save(item T) (T, error) {
 	return item, err
 }
 
-func (c *Collection[T]) Get(id string) (T, error) {
+func (c *Collection[T]) Get(id string) (*T, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
 	item, ok := c.values[id]
 
 	if !ok {
-		return item, fmt.Errorf("Item not found")
+		return nil, fmt.Errorf("Item not found")
 	}
 
-	return item, nil
+	return &item, nil
 }
 
 func (c *Collection[T]) GetAll() (map[string]T, error) {

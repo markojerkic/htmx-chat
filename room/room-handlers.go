@@ -41,6 +41,7 @@ func AllRoomsHandler(c echo.Context) error {
 	currentUsrer := c.Get("user").(auth.User)
 
 	rooms := RoomsStore.GetAllMyRooms(currentUsrer)
+	c.Logger().Debug("Tu sam")
 
 	var selectedRoom *chatRoom
 
@@ -55,12 +56,10 @@ func AllRoomsHandler(c echo.Context) error {
 			return c.Redirect(302, "/")
 		}
 
-		selectedRoom = &room
+		selectedRoom = room
 	}
 
 	roomsComponent := allRooms(rooms, currentUsrer, selectedRoom)
-
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 
 	return roomsComponent.Render(c.Request().Context(), c.Response().Writer)
 }
@@ -75,7 +74,7 @@ func createRoomWithRoomListPartialHandler(c echo.Context) error {
 		return c.String(404, "User not found")
 	}
 
-	room, err := RoomsStore.AddRoom(currentUsrer, requestUser)
+	room, err := RoomsStore.AddRoom(currentUsrer, *requestUser)
 	if err != nil {
 		return c.String(500, "Error creating room")
 	}

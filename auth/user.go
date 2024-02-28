@@ -34,7 +34,7 @@ func (r *RegisteredUsers) Add(user User) {
 	r.users.Save(user)
 }
 
-func (r *RegisteredUsers) GetUserById(id string) (User, error) {
+func (r *RegisteredUsers) GetUserById(id string) (*User, error) {
 	return r.users.Get(id)
 }
 
