@@ -125,14 +125,12 @@ func openRoomPartialHandler(c echo.Context) error {
 		return c.String(403, "You are not allowed to see this room")
 	}
 
-	c.Logger().Debugf("Room: %v", room)
-
 	currentUser := c.Get("user").(auth.User)
 	requestedUser := room.GetClientWhichIsNotMe(currentUser.ID)
 
 	c.Logger().Debugf("Requested user: %v", requestedUser)
 
-	chatComponent := Chat(requestedUser.ID, requestedUser.Name, room.ID)
+	chatComponent := Chat(requestedUser.ID, requestedUser.Name, room)
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 

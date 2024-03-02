@@ -43,15 +43,23 @@ templ chatBubble(isMine bool, message string) {
 </div>
 }
 
-templ Chat(userID string, userName string, roomId string) {
+templ Chat(userID string, userName string, room *chatRoom) {
 @chatLayout() {
 @chatPersonHeader(userName)
 <template id="myMessageTemplate">
     @myMessage("Template poruka")
 </template>
-<div id="messages" class="p-2 w-full grow bg-blue-200 overflow-y-auto flex flex-col space-y-2"></div>
+<div id="messages" class="p-2 w-full grow bg-blue-200 overflow-y-auto flex flex-col space-y-2">
+    for _, message := range room.Messages {
+    if message.SenderId != userID {
+    @myMessage(message.Message)
+    } else {
+    @receivedMessage(message.Message)
+    }
+    }
+</div>
 <form id="chatForm" ws-send>
-    <input type="hidden" name="roomId" required value={ roomId } />
+    <input type="hidden" name="roomId" required value={ room.ID } />
     <input type="text" name="message" required class="w-full p-1 h-12 border border-black rounded-md"
         placeholder="Unesite sljedeću poruku" />
     <!-- <button type="submit">Send</button> -->

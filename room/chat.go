@@ -16,9 +16,9 @@ var upgrader = websocket.Upgrader{
 }
 
 type Message struct {
-	message  string
-	roomId   string
-	senderId string
+	Message  string `json:"message"`
+	RoomId   string `json:"roomId"`
+	SenderId string `json:"senderId"`
 }
 
 type Client struct {
@@ -50,14 +50,19 @@ func (c *Client) readMessages() {
 
 		json.Unmarshal(messageBuf, &receivedWsMessage)
 
-		c.logger.Debugf("Received message: \"%s\" to room %s", receivedWsMessage.Message, receivedWsMessage.RoomId)
-
 		message := Message{
-			message:  receivedWsMessage.Message,
-			roomId:   receivedWsMessage.RoomId,
-			senderId: c.userId,
+			Message:  receivedWsMessage.Message,
+			RoomId:   receivedWsMessage.RoomId,
+			SenderId: c.userId,
 		}
 
+		room, err := RoomsStore.rooms.Get(receivedWsMessage.RoomId)
+		if err != nil {
+			c.logger.Errorf("Error: %v", err)
+			continue
+		}
+
+		room.AddMessage(message)
 		c.hub.messages <- message
 	}
 }
@@ -68,7 +73,7 @@ func (c *Client) sendMessages() {
 		message := <-c.messageReceiver
 
 		renderedMessage := new(bytes.Buffer)
-		chatBubble(false, message.message).Render(context.Background(), renderedMessage)
+		chatBubble(false, message.Message).Render(context.Background(), renderedMessage)
 
 		err := c.wsConnection.WriteMessage(websocket.TextMessage, renderedMessage.Bytes())
 		if err != nil {

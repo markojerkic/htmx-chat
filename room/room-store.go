@@ -3,13 +3,13 @@ package room
 import (
 	"htmx-chat/auth"
 	"htmx-chat/db"
-
 )
 
 type chatRoom struct {
 	ID        string
 	ClientAID string
 	ClientBID string
+	Messages  []Message
 }
 
 func (c chatRoom) GetUserA() (*auth.User, error) {
@@ -18,6 +18,11 @@ func (c chatRoom) GetUserA() (*auth.User, error) {
 
 func (c chatRoom) GetUserB() (*auth.User, error) {
 	return auth.UsersStore.GetUserById(c.ClientBID)
+}
+
+func (c *chatRoom) AddMessage(message Message) {
+	c.Messages = append(c.Messages, message)
+	RoomsStore.Save(*c)
 }
 
 func (r *chatRoom) GetClientWhichIsNotMe(myId string) auth.User {
@@ -58,6 +63,10 @@ func (r *roomStore) GetAllMyRooms(user auth.User) []chatRoom {
 	})
 }
 
+func (r *roomStore) Save(room chatRoom) (chatRoom, error) {
+	return r.rooms.Save(room)
+}
+
 func (r *roomStore) AddRoom(userA auth.User, userB auth.User) (chatRoom, error) {
 	room, err := r.rooms.GetByPredicate(func(room chatRoom) bool {
 		isClientA := room.ClientAID == userA.ID || room.ClientAID == userB.ID
@@ -73,6 +82,7 @@ func (r *roomStore) AddRoom(userA auth.User, userB auth.User) (chatRoom, error) 
 	room = chatRoom{
 		ClientAID: userA.ID,
 		ClientBID: userB.ID,
+		Messages:  make([]Message, 10),
 	}
 
 	return r.rooms.Save(room)
@@ -80,10 +90,6 @@ func (r *roomStore) AddRoom(userA auth.User, userB auth.User) (chatRoom, error) 
 
 func (r *roomStore) GetRoom(id string) (*chatRoom, error) {
 	room, err := r.rooms.Get(id)
-
-	// if err == nil && room.wsClients == nil {
-	// 	// room.wsClients = make(map[string]*websocket.Conn)
-	// }
 
 	return room, err
 }

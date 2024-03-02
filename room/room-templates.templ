@@ -43,7 +43,7 @@ templ allRooms(rooms []chatRoom, currentUser auth.User, room *chatRoom) {
     ws-connect="/ws">
     @roomsList(rooms, currentUser.ID)
     if room != nil {
-    @Chat(room.GetClientWhichIsNotMe(currentUser.ID).ID, room.GetClientWhichIsNotMe(currentUser.ID).Name, room.ID)
+    @Chat(room.GetClientWhichIsNotMe(currentUser.ID).ID, room.GetClientWhichIsNotMe(currentUser.ID).Name, room)
     } else {
     @EmptyChat()
     }
@@ -75,5 +75,5 @@ for _, user := range users {
 
 templ createNewRoom(rooms []chatRoom, newRoom chatRoom, currentUser auth.User) {
 @roomsList(rooms, currentUser.ID)
-@Chat(newRoom.GetClientWhichIsNotMe(currentUser.ID).ID, newRoom.GetClientWhichIsNotMe(currentUser.ID).Name, newRoom.ID)
+@Chat(newRoom.GetClientWhichIsNotMe(currentUser.ID).ID, newRoom.GetClientWhichIsNotMe(currentUser.ID).Name, &newRoom)
 }

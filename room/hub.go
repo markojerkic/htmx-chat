@@ -25,13 +25,13 @@ func (h *Hub) Run() {
 			delete(h.connectedClients, client)
 			close(client.messageReceiver)
 		case message := <-h.messages:
-			roomId := message.roomId
+			roomId := message.RoomId
 			room, err := RoomsStore.GetRoom(roomId)
 			if err != nil {
 				continue
 			}
 
-			receiver := room.GetClientWhichIsNotMe(message.senderId)
+			receiver := room.GetClientWhichIsNotMe(message.SenderId)
 			h.broadcastMessage(message, receiver.ID)
 		}
 	}
