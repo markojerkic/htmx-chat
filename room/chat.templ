@@ -27,7 +27,7 @@ templ myMessage(message string) {
 
 templ receivedMessage(message string) {
 <div
-    class="rounded-t-lg rounded-l-lg items-center px-4 py-2 w-fit max-w-[80%] bg-purple-500 dark:bg-purple-700 self-start">
+    class="rounded-t-lg rounded-r-lg items-center px-4 py-2 w-fit max-w-[80%] bg-purple-500 dark:bg-purple-700 self-start">
     <p class="text-white">{ message }</p>
     <time class="text-xs text-gray-500 dark:text-gray-400">{ time.Now().Format("22:00") }</time>
 </div>
