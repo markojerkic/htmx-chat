@@ -4,14 +4,12 @@ import (
 	"htmx-chat/auth"
 	"htmx-chat/db"
 
-	"github.com/gorilla/websocket"
 )
 
 type chatRoom struct {
 	ID        string
 	ClientAID string
 	ClientBID string
-	wsClients map[string]*websocket.Conn `json:'-'`
 }
 
 func (c chatRoom) GetUserA() (*auth.User, error) {
@@ -75,7 +73,6 @@ func (r *roomStore) AddRoom(userA auth.User, userB auth.User) (chatRoom, error) 
 	room = chatRoom{
 		ClientAID: userA.ID,
 		ClientBID: userB.ID,
-		wsClients: make(map[string]*websocket.Conn),
 	}
 
 	return r.rooms.Save(room)
@@ -84,9 +81,9 @@ func (r *roomStore) AddRoom(userA auth.User, userB auth.User) (chatRoom, error) 
 func (r *roomStore) GetRoom(id string) (*chatRoom, error) {
 	room, err := r.rooms.Get(id)
 
-	if err == nil && room.wsClients == nil {
-		room.wsClients = make(map[string]*websocket.Conn)
-	}
+	// if err == nil && room.wsClients == nil {
+	// 	// room.wsClients = make(map[string]*websocket.Conn)
+	// }
 
 	return room, err
 }

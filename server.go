@@ -10,6 +10,9 @@ import (
 )
 
 func main() {
+	hub := room.NewHub()
+    go hub.Run()
+
 	e := echo.New()
 	e.Debug = true
 
@@ -25,7 +28,7 @@ func main() {
 	restricted.GET("/room/new", room.SearchUsersFormHandler)
 	restricted.GET("/room/search", room.SearchUsersNewRoom)
 
-	restricted.GET("/room/:id/connect", room.ConnectToRoom)
+	restricted.GET("/ws", room.ConnectClientToWS(hub))
 
 	e.GET("/register", auth.RegisterViewHandler)
 	e.POST("/register", auth.RegisterHandler)

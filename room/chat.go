@@ -1,85 +1,104 @@
 package room
 
 import (
-	"bytes"
-	"context"
-	"fmt"
-	"htmx-chat/auth"
-
 	"encoding/json"
+	"htmx-chat/auth"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
 
-var (
-	upgrader = websocket.Upgrader{}
-)
-
-func openRoomPartialHandler(c echo.Context) error {
-	roomId := c.Param("id")
-
-	room, err := RoomsStore.GetRoom(roomId)
-	if err != nil {
-		c.Logger().Error("Error getting requested room", err)
-		return c.String(404, "Room not found")
-	}
-	if !room.IsUserInRoom(c.Get("user").(auth.User).ID) {
-		c.Response().Header().Set("HX-Redirect", "/")
-		return c.String(403, "You are not allowed to see this room")
-	}
-
-	c.Logger().Debugf("Room: %v", room)
-
-	currentUser := c.Get("user").(auth.User)
-	requestedUser := room.GetClientWhichIsNotMe(currentUser.ID)
-
-	c.Logger().Debugf("Requested user: %v", requestedUser)
-
-	chatComponent := Chat(requestedUser.ID, requestedUser.Name, room.ID)
-
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
-
-	return chatComponent.Render(c.Request().Context(), c.Response().Writer)
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
-func ConnectToRoom(c echo.Context) error {
-	c.Logger().Error("Want to connect to a room")
-	roomId := c.Param("id")
-	room, err := RoomsStore.GetRoom(roomId)
+type Message struct {
+	message  string
+	roomId   string
+	senderId string
+}
 
-	if err != nil {
-		c.Logger().Errorf("Room %s does not exist", roomId)
-		return c.String(404, fmt.Sprintf("%v", err))
-	}
+type Client struct {
+	wsConnection    *websocket.Conn
+	userId          string
+	messageReceiver chan Message
+	hub             *Hub
+	logger          echo.Logger
+}
 
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+type WsMessage struct {
+	Message string            `json:message`
+	RoomId  string            `json:roomId`
+	HEADERS map[string]string `json:HEADERS`
+}
 
-	if err != nil {
-		c.Logger().Error("Error creating ws connection", err)
-		return err
-	}
-	defer ws.Close()
+func (c *Client) readMessages() {
+	defer c.wsConnection.Close()
 
-	room.wsClients[roomId] = ws
-
+	var receivedWsMessage WsMessage
 	for {
-
-		_, msg, err := ws.ReadMessage()
+		_, messageBuf, err := c.wsConnection.ReadMessage()
 		if err != nil {
-			c.Logger().Error(err)
-			return err
-		}
-		var message map[string]string
-		err = json.Unmarshal(msg, &message)
-		if err != nil {
-			c.Logger().Error(err)
-			return err
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				c.logger.Errorf("Error: %v", err)
+			}
+			break
 		}
 
-		renderedMessage := new(bytes.Buffer)
-		chatBubble(true, message["message"]).Render(context.Background(), renderedMessage)
+		json.Unmarshal(messageBuf, &receivedWsMessage)
 
-		ws.WriteMessage(websocket.TextMessage, renderedMessage.Bytes())
+		c.logger.Debug("Received message: ", receivedWsMessage.Message)
+
+		message := Message{
+			message:  receivedWsMessage.Message,
+			roomId:   receivedWsMessage.RoomId,
+			senderId: c.userId,
+		}
+
+		c.hub.messages <- message
 	}
+}
+
+func (c *Client) sendMessages() {
+	defer c.wsConnection.Close()
+	for {
+		message := <-c.messageReceiver
+
+		err := c.wsConnection.WriteJSON(message)
+		if err != nil {
+			break
+		}
+	}
+
+}
+
+func ConnectClientToWS(hub *Hub) func(echo.Context) error {
+	return func(c echo.Context) error {
+		user, ok := c.Get("user").(auth.User)
+		if !ok {
+			return c.Redirect(302, "/register")
+		}
+
+		ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+		if err != nil {
+			return err
+		}
+
+		client := &Client{
+			wsConnection:    ws,
+			hub:             hub,
+			userId:          user.ID,
+			messageReceiver: make(chan Message, 256),
+			logger:          c.Logger(),
+		}
+
+		hub.connectionRequest <- client
+
+		go client.readMessages()
+		go client.sendMessages()
+
+		return nil
+	}
+
 }
