@@ -1,7 +1,5 @@
 package room
 
-import "log"
-
 type Hub struct {
 	connectionRequest chan *Client
 	disconnectClient  chan *Client

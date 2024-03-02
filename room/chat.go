@@ -1,6 +1,8 @@
 package room
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"htmx-chat/auth"
 
@@ -28,9 +30,9 @@ type Client struct {
 }
 
 type WsMessage struct {
-	Message string            `json:message`
-	RoomId  string            `json:roomId`
-	HEADERS map[string]string `json:HEADERS`
+	RoomId  string            `json:"roomId"`
+	Message string            `json:"message"`
+	HEADERS map[string]string `json:"HEADERS"`
 }
 
 func (c *Client) readMessages() {
@@ -48,7 +50,7 @@ func (c *Client) readMessages() {
 
 		json.Unmarshal(messageBuf, &receivedWsMessage)
 
-		c.logger.Debug("Received message: ", receivedWsMessage.Message)
+		c.logger.Debugf("Received message: \"%s\" to room %s", receivedWsMessage.Message, receivedWsMessage.RoomId)
 
 		message := Message{
 			message:  receivedWsMessage.Message,
@@ -65,8 +67,12 @@ func (c *Client) sendMessages() {
 	for {
 		message := <-c.messageReceiver
 
-		err := c.wsConnection.WriteJSON(message)
+		renderedMessage := new(bytes.Buffer)
+		chatBubble(false, message.message).Render(context.Background(), renderedMessage)
+
+		err := c.wsConnection.WriteMessage(websocket.TextMessage, renderedMessage.Bytes())
 		if err != nil {
+			c.logger.Errorf("Error: %v", err)
 			break
 		}
 	}
