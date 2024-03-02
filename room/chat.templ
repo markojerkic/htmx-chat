@@ -90,6 +90,8 @@ templ Chat(userID string, userName string, room *chatRoom) {
             addMyMessage(JSON.parse(e.detail.message))
         })
         htmx.on("htmx:wsAfterMessage", scrollDown)
+        // Scroll to bottom on loading the chat
+        scrollDown()
     </script>
 </form>
 }
