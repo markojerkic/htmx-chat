@@ -5,4 +5,5 @@ It is a proof of concept of what you can do with Go, Templ and HTMX.
 
 I am using the WebSockets extension of HTMX to send and receive messages and update chat status in real-time.
 
-<img src="./htmx-chat.gif" >
+https://github.com/markojerkic/htmx-chat/assets/22824333/2ba924c5-4bad-433d-bb4b-c8346778abeb
+
