@@ -43,21 +43,25 @@ templ roomPreview(room chatRoom, currentUserId string) {
 	</li>
 }
 
+templ roomListWithPreview(rooms []chatRoom, currentUserId string) {
+	<ul id="roomList" role="list" class="grow divide-y divide-gray-100 flex flex-col justify-start">
+		<button
+			class="my-2 mx-auto p-2 bg-blue-500 text-white rounded-sm"
+			hx-get="/room/new"
+			hx-trigger="click"
+			hx-target="#roomList"
+			hx-swap="innerHTML"
+		>+ Add new room</button>
+		for _, room := range rooms {
+			@roomPreview(room, currentUserId)
+		}
+	</ul>
+}
+
 templ roomsList(rooms []chatRoom, currentUserId string) {
 	<div class="border border-black rounded-md flex flex-col justify-start">
 		<h2 class="shrink">Chat Rooms</h2>
-		<ul id="roomList" role="list" class="grow divide-y divide-gray-100 flex flex-col justify-start">
-			<button
-				class="my-2 mx-auto p-2 bg-blue-500 text-white rounded-sm"
-				hx-get="/room/new"
-				hx-trigger="click"
-				hx-target="#roomList"
-				hx-swap="innerHTML"
-			>+ Add new room</button>
-			for _, room := range rooms {
-				@roomPreview(room, currentUserId)
-			}
-		</ul>
+		@roomListWithPreview(rooms, currentUserId)
 		<a class="p-2 bg-rose-500 text-white hover:bg-rose-700" href="/register">Sign out</a>
 	</div>
 }

@@ -29,6 +29,7 @@ type Client struct {
 	messageReceiver chan Message
 	hub             *Hub
 	logger          echo.Logger
+	currentRoomId   string
 }
 
 type WsMessage struct {
@@ -51,6 +52,11 @@ func (c *Client) readMessages() {
 		}
 
 		json.Unmarshal(messageBuf, &receivedWsMessage)
+
+		if receivedWsMessage.HEADERS["HX-Trigger"] == "currentRoom" {
+			c.currentRoomId = receivedWsMessage.RoomId
+			continue
+		}
 
 		message := Message{
 			Message:  receivedWsMessage.Message,
@@ -76,13 +82,27 @@ func (c *Client) sendMessages() {
 		message := <-c.messageReceiver
 
 		renderedMessage := new(bytes.Buffer)
-		chatBubble(false, message.Message, message.Date).Render(context.Background(), renderedMessage)
+
+		if c.currentRoomId == message.RoomId {
+			chatBubble(false, message.Message, message.Date).Render(context.Background(), renderedMessage)
+
+			err := c.wsConnection.WriteMessage(websocket.TextMessage, renderedMessage.Bytes())
+			if err != nil {
+				c.logger.Errorf("Error: %v", err)
+				break
+			}
+            renderedMessage.Reset()
+		}
+
+		myRooms := RoomsStore.GetAllMyRooms(auth.User{ID: c.userId})
+		roomListWithPreview(myRooms, c.userId).Render(context.Background(), renderedMessage)
 
 		err := c.wsConnection.WriteMessage(websocket.TextMessage, renderedMessage.Bytes())
 		if err != nil {
 			c.logger.Errorf("Error: %v", err)
 			break
 		}
+
 	}
 
 }

@@ -68,6 +68,9 @@ templ Chat(userID string, userName string, room *chatRoom) {
 				}
 			}
 		</div>
+        <form id="currentRoom" ws-send hx-trigger="load">
+            <input type="hidden" name="roomId" required value={ room.ID }/>
+        </form>
 		<form id="chatForm" ws-send>
 			<input type="hidden" name="roomId" required value={ room.ID }/>
 			<input
@@ -78,52 +81,53 @@ templ Chat(userID string, userName string, room *chatRoom) {
 				placeholder="Unesite sljedeću poruku"
 			/>
 			<!-- <button type="submit">Send</button> -->
-			<script>
-        /**
-         *  @typedef {Object} MessageDetail
-         *  @property {string} roomId
-         *  @property {string} message
-         *  @param {MessageDetail} messageDetail
-        */
-        function addMyMessage(messageDetail) {
-            console.log("Message for room", messageDetail.roomId, messageDetail.message)
-            const template = document.querySelector("#myMessageTemplate")
-            const clone = document.importNode(template.content, true)
-
-            // Get the current date and time
-            const currentDate = new Date();
-
-            // Get hours and minutes
-            let hours = currentDate.getHours();
-            let minutes = currentDate.getMinutes();
-
-            // Pad single-digit hours and minutes with leading zeros
-            hours = hours < 10 ? '0' + hours : hours;
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-
-            // Format the time as "hh:MM"
-            const formattedTime = hours + ':' + minutes;
-
-            clone.querySelector("p").innerText = messageDetail.message
-            clone.querySelector("time").innerText = formattedTime
-            const messagesDiv = document.querySelector("#messages")
-            messagesDiv.appendChild(clone)
-            scrollDown()
-        }
-        function scrollDown() {
-            const messagesDiv = document.querySelector("#messages")
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-        htmx.on("htmx:wsAfterSend", function (e) {
-            e.srcElement.querySelector("input[name='message']").value = ""
-
-            addMyMessage(JSON.parse(e.detail.message))
-        })
-        htmx.on("htmx:wsAfterMessage", scrollDown)
-        // Scroll to bottom on loading the chat
-        scrollDown()
-    </script>
 		</form>
+		<script>
+    /**
+     *  @typedef {Object} MessageDetail
+     *  @property {string} roomId
+     *  @property {string} message
+     *  @param {MessageDetail} messageDetail
+    */
+    function addMyMessage(messageDetail) {
+        console.log("Message for room", messageDetail.roomId, messageDetail.message)
+        const template = document.querySelector("#myMessageTemplate")
+        const clone = document.importNode(template.content, true)
+
+        // Get the current date and time
+        const currentDate = new Date();
+
+        // Get hours and minutes
+        let hours = currentDate.getHours();
+        let minutes = currentDate.getMinutes();
+
+        // Pad single-digit hours and minutes with leading zeros
+        hours = hours < 10 ? '0' + hours : hours;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+
+        // Format the time as "hh:MM"
+        const formattedTime = hours + ':' + minutes;
+
+        clone.querySelector("p").innerText = messageDetail.message
+        clone.querySelector("time").innerText = formattedTime
+        const messagesDiv = document.querySelector("#messages")
+        messagesDiv.appendChild(clone)
+        scrollDown()
+    }
+    function scrollDown() {
+        const messagesDiv = document.querySelector("#messages")
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    htmx.on("htmx:wsAfterSend", function (e) {
+        if (e.srcElement.id !== "chatForm") return
+        e.srcElement.querySelector("input[name='message']").value = ""
+
+        addMyMessage(JSON.parse(e.detail.message))
+    })
+    htmx.on("htmx:wsAfterMessage", scrollDown)
+    // Scroll to bottom on loading the chat
+    scrollDown()
+</script>
 	}
 }
 
