@@ -4,66 +4,81 @@ import "fmt"
 import "time"
 
 templ chatLayout() {
-<div id="chat"
-    class="p-4 col-span-3 w-full h-full max-h-[96vh] flex flex-col justify-between border border-black rounded-md">
-    { children... }
-</div>
+	<div
+		id="chat"
+		class="p-4 col-span-3 w-full h-full max-h-[96vh] flex flex-col justify-between border border-black rounded-md"
+	>
+		{ children... }
+	</div>
 }
 
 templ chatPersonHeader(userName string) {
-<div class="flex items-center">
-    <img src={ fmt.Sprintf("https://api.dicebear.com/7.x/adventurer/svg?seed=%s", userName) }
-        class="w-12 h-12 rounded-full" alt="user" />
-    <span class="ml-4 font-bold">{ userName }</span>
-</div>
+	<div class="flex items-center">
+		<img
+			src={ fmt.Sprintf("https://api.dicebear.com/7.x/adventurer/svg?seed=%s", userName) }
+			class="w-12 h-12 rounded-full"
+			alt="user"
+		/>
+		<span class="ml-4 font-bold">{ userName }</span>
+	</div>
 }
 
-templ myMessage(message string) {
-<div class="rounded-t-lg rounded-l-lg items-center px-4 py-2 w-fit max-w-[80%] bg-teal-500 dark:bg-teal-700 self-end">
-    <p class="text-white">{ message }</p>
-    <time class="text-xs text-gray-500 dark:text-gray-400">{ time.Now().Format("22:00") }</time>
-</div>
+templ myMessage(message string, sent time.Time) {
+	<div class="rounded-t-lg rounded-l-lg items-center px-4 py-2 w-fit max-w-[80%] bg-teal-500 dark:bg-teal-700 self-end">
+		<p class="text-white">{ message }</p>
+		<time class="text-xs text-gray-500 dark:text-gray-400">
+			{ sent.In(time.FixedZone("CET", 3600)).Format("15:04") }
+		</time>
+	</div>
 }
 
-templ receivedMessage(message string) {
-<div
-    class="rounded-t-lg rounded-r-lg items-center px-4 py-2 w-fit max-w-[80%] bg-purple-500 dark:bg-purple-700 self-start">
-    <p class="text-white">{ message }</p>
-    <time class="text-xs text-gray-500 dark:text-gray-400">{ time.Now().Format("22:00") }</time>
-</div>
+templ receivedMessage(message string, sent time.Time) {
+	<div
+		class="rounded-t-lg rounded-r-lg items-center px-4 py-2 w-fit max-w-[80%] bg-purple-500 dark:bg-purple-700 self-start"
+	>
+		<p class="text-white">{ message }</p>
+		<time class="text-xs text-gray-500 dark:text-gray-400">
+			{ sent.In(time.FixedZone("CET", 3600)).Format("15:04") }
+		</time>
+	</div>
 }
 
-templ chatBubble(isMine bool, message string) {
-<div id="messages" hx-swap-oob="beforeend">
-    if !isMine {
-    @receivedMessage(message)
-    } else {
-    @myMessage(message)
-    }
-</div>
+templ chatBubble(isMine bool, message string, sent time.Time) {
+	<div id="messages" hx-swap-oob="beforeend">
+		if !isMine {
+			@receivedMessage(message, sent)
+		} else {
+			@myMessage(message, sent)
+		}
+	</div>
 }
 
 templ Chat(userID string, userName string, room *chatRoom) {
-@chatLayout() {
-@chatPersonHeader(userName)
-<template id="myMessageTemplate">
-    @myMessage("Template poruka")
-</template>
-<div id="messages" class="p-2 w-full grow bg-blue-200 overflow-y-auto flex flex-col space-y-2">
-    for _, message := range room.Messages {
-    if message.SenderId != userID {
-    @myMessage(message.Message)
-    } else {
-    @receivedMessage(message.Message)
-    }
-    }
-</div>
-<form id="chatForm" ws-send>
-    <input type="hidden" name="roomId" required value={ room.ID } />
-    <input type="text" name="message" required class="w-full p-1 h-12 border border-black rounded-md"
-        placeholder="Unesite sljedeću poruku" />
-    <!-- <button type="submit">Send</button> -->
-    <script>
+	@chatLayout() {
+		@chatPersonHeader(userName)
+		<template id="myMessageTemplate">
+			@myMessage("Template poruka", time.Now())
+		</template>
+		<div id="messages" class="p-2 w-full grow bg-blue-200 overflow-y-auto flex flex-col space-y-2">
+			for _, message := range room.Messages {
+				if message.SenderId != userID {
+					@myMessage(message.Message, message.Date)
+				} else {
+					@receivedMessage(message.Message, message.Date)
+				}
+			}
+		</div>
+		<form id="chatForm" ws-send>
+			<input type="hidden" name="roomId" required value={ room.ID }/>
+			<input
+				type="text"
+				name="message"
+				required
+				class="w-full p-1 h-12 border border-black rounded-md"
+				placeholder="Unesite sljedeću poruku"
+			/>
+			<!-- <button type="submit">Send</button> -->
+			<script>
         /**
          *  @typedef {Object} MessageDetail
          *  @property {string} roomId
@@ -75,7 +90,22 @@ templ Chat(userID string, userName string, room *chatRoom) {
             const template = document.querySelector("#myMessageTemplate")
             const clone = document.importNode(template.content, true)
 
+            // Get the current date and time
+            const currentDate = new Date();
+
+            // Get hours and minutes
+            let hours = currentDate.getHours();
+            let minutes = currentDate.getMinutes();
+
+            // Pad single-digit hours and minutes with leading zeros
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+
+            // Format the time as "hh:MM"
+            const formattedTime = hours + ':' + minutes;
+
             clone.querySelector("p").innerText = messageDetail.message
+            clone.querySelector("time").innerText = formattedTime
             const messagesDiv = document.querySelector("#messages")
             messagesDiv.appendChild(clone)
             scrollDown()
@@ -93,12 +123,12 @@ templ Chat(userID string, userName string, room *chatRoom) {
         // Scroll to bottom on loading the chat
         scrollDown()
     </script>
-</form>
-}
+		</form>
+	}
 }
 
 templ EmptyChat() {
-@chatLayout() {
-<span>Odaberite sobu</span>
-}
+	@chatLayout() {
+		<span>Odaberite sobu</span>
+	}
 }

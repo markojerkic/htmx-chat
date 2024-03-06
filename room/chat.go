@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"htmx-chat/auth"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -16,9 +17,10 @@ var upgrader = websocket.Upgrader{
 }
 
 type Message struct {
-	Message  string `json:"message"`
-	RoomId   string `json:"roomId"`
-	SenderId string `json:"senderId"`
+	Message  string    `json:"message"`
+	RoomId   string    `json:"roomId"`
+	SenderId string    `json:"senderId"`
+	Date     time.Time `json:"date"`
 }
 
 type Client struct {
@@ -54,6 +56,7 @@ func (c *Client) readMessages() {
 			Message:  receivedWsMessage.Message,
 			RoomId:   receivedWsMessage.RoomId,
 			SenderId: c.userId,
+			Date:     time.Now(),
 		}
 
 		room, err := RoomsStore.rooms.Get(receivedWsMessage.RoomId)
@@ -73,7 +76,7 @@ func (c *Client) sendMessages() {
 		message := <-c.messageReceiver
 
 		renderedMessage := new(bytes.Buffer)
-		chatBubble(false, message.Message).Render(context.Background(), renderedMessage)
+		chatBubble(false, message.Message, message.Date).Render(context.Background(), renderedMessage)
 
 		err := c.wsConnection.WriteMessage(websocket.TextMessage, renderedMessage.Bytes())
 		if err != nil {

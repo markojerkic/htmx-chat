@@ -25,6 +25,15 @@ func (c *chatRoom) AddMessage(message Message) {
 	RoomsStore.Save(*c)
 }
 
+func (c chatRoom) GetLastMessage() string {
+	messagesLen := len(c.Messages)
+
+	if messagesLen == 0 {
+		return ""
+	}
+	return c.Messages[messagesLen-1].Message
+}
+
 func (r *chatRoom) GetClientWhichIsNotMe(myId string) auth.User {
 	if r.ClientAID == myId {
 		user, err := r.GetUserB()
@@ -82,7 +91,7 @@ func (r *roomStore) AddRoom(userA auth.User, userB auth.User) (chatRoom, error) 
 	room = chatRoom{
 		ClientAID: userA.ID,
 		ClientBID: userB.ID,
-		Messages:  make([]Message, 10),
+		Messages:  make([]Message, 0, 10),
 	}
 
 	return r.rooms.Save(room)
