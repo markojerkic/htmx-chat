@@ -68,9 +68,9 @@ templ Chat(userID string, userName string, room *chatRoom) {
 				}
 			}
 		</div>
-        <form id="currentRoom" ws-send hx-trigger="load">
-            <input type="hidden" name="roomId" required value={ room.ID }/>
-        </form>
+		<form id="currentRoom" ws-send hx-trigger="load">
+			<input type="hidden" name="roomId" required value={ room.ID }/>
+		</form>
 		<form id="chatForm" ws-send>
 			<input type="hidden" name="roomId" required value={ room.ID }/>
 			<input
