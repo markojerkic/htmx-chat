@@ -13,6 +13,18 @@ func RegisterViewHandler(c echo.Context) error {
 
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return err
+	}
+
+	sess.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	}
+	err = sess.Save(c.Request(), c.Response())
+
 	return register.Render(c.Request().Context(), c.Response().Writer)
 }
 
@@ -56,7 +68,7 @@ func RegisterHandler(c echo.Context) error {
 
 	sess.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   86400 * 7,
+		MaxAge:   60 * 5,
 		HttpOnly: true,
 	}
 

@@ -11,7 +11,7 @@ import (
 
 func main() {
 	hub := room.NewHub()
-    go hub.Run()
+	go hub.Run()
 
 	e := echo.New()
 	e.Debug = true
